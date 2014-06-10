@@ -1,698 +1,605 @@
+
 /* jshint loopfunc: true */
 /* global $R, FormatTime, Draggable, TableKit, SortUnique */
 
-this.SearchTab = Class.create(Tab,
-{
-	initialize: function($super, server_results, rootCSS, jukebox, template)
-	{
-		this.reloadControllers = true;
-		this.pages = [];
-		this.sliders = [];
-		this.tableKit = null;
-		this.DOM = null;
+this.SearchTab = Class.create(Tab, {
+    initialize: function($super, server_results, rootCSS, jukebox, template) {
+        this.reloadControllers = true;
+        this.pages = [];
+        this.sliders = [];
+        this.tableKit = null;
+        this.DOM = null;
 
-		$super(rootCSS, jukebox, template);
+        $super(rootCSS, jukebox, template);
 
-		this.updateNewSearchInformations(server_results);
-	},
+        this.updateNewSearchInformations(server_results);
+    },
 
-	// Implements getOptions
-	getOptions: function()
-	{
-		var opts = {},
-			count = 0,
-			toSave = ['select_fields', 'search_value', 'search_comparison', 'search_field', 'order_by', 'result_count', 'current_page'];
-		for(var i = 0; i < toSave.length; ++i)
-		{
-			var prop = toSave[i];
-			if(this.hasOwnProperty(prop))
-			{
-				opts[prop] = this[prop]; // Ensure it is a copy, not a reference
-				count++;
-			}
-		}
-		return count === 0 ? null : opts;
-	},
+    // Implements getOptions
+    getOptions: function() {
+        var opts = {},
+            count = 0,
+            toSave = ['select_fields', 'search_value', 'search_comparison', 'search_field', 'order_by', 'result_count', 'current_page'];
+        for (var i = 0; i < toSave.length; ++i) {
+            var prop = toSave[i];
+            if (this.hasOwnProperty(prop)) {
+                opts[prop] = this[prop]; // Ensure it is a copy, not a reference
+                count++;
+            }
+        }
+        return count === 0 ? null : opts;
+    },
 
-	updateNewSearchInformations: function(server_results)
-	{
-		var oldOptions = this.getOptions(),
-			search = server_results.search_value,
-			field = server_results.search_field;
-		if(search === '')
-		{
-			this.name = 'Library';
-		}
-		else if(server_results.search_comparison == 'equal')
-		{
-			if(field == 'artist')
-			{
-				this.name = 'Artist: ' + search;
-			}
-			else if(field == 'album')
-			{
-				this.name = 'Album: ' + search;
-			}
-			else if(field == 'genre')
-			{
-				this.name = 'Genre: ' + genres[search];
-			}
-		}
-		else
-		{
-			this.name = search;
-		}
+    updateNewSearchInformations: function(server_results) {
+        var oldOptions = this.getOptions(),
+            search = server_results.search_value,
+            field = server_results.search_field;
+        if (search === '') {
+            this.name = 'Library';
+        } else if (server_results.search_comparison == 'equal') {
+            if (field == 'artist') {
+                this.name = 'Artist: ' + search;
+            } else if (field == 'album') {
+                this.name = 'Album: ' + search;
+            } else if (field == 'genre') {
+                this.name = 'Genre: ' + genres[search];
+            }
+        } else {
+            this.name = search;
+        }
 
-		this.select_fields = server_results.select_fields;
-		this.search_value = server_results.search_value;
-		this.search_comparison = server_results.search_comparison;
-		this.search_field = server_results.search_field;
-		this.first_result = server_results.first_result;
-		this.result_count = parseInt(server_results.result_count, 10);
-		this.order_by = server_results.order_by;
-		this.total_results = server_results.total_results;
-		this.server_results = server_results.results || [];
+        this.select_fields = server_results.select_fields;
+        this.search_value = server_results.search_value;
+        this.search_comparison = server_results.search_comparison;
+        this.search_field = server_results.search_field;
+        this.first_result = server_results.first_result;
+        this.result_count = parseInt(server_results.result_count, 10);
+        this.order_by = server_results.order_by;
+        this.total_results = server_results.total_results;
+        this.server_results = server_results.results || [];
 
-		// Gets the number of pages
-		this.page_count = Math.floor(this.total_results / this.result_count);
-		if(this.total_results % this.result_count > 0)
-		{
-			this.page_count = this.page_count + 1;
-		}
+        // Gets the number of pages
+        this.page_count = Math.floor(this.total_results / this.result_count);
+        if (this.total_results % this.result_count > 0) {
+            this.page_count = this.page_count + 1;
+        }
 
-		// Gets the current page number
-		this.current_page = Math.floor(this.first_result / this.result_count) + 1;
-		if(this.current_page > this.page_count)
-		{
-			this.current_page = 1;
-		}
+        // Gets the current page number
+        this.current_page = Math.floor(this.first_result / this.result_count) + 1;
+        if (this.current_page > this.page_count) {
+            this.current_page = 1;
+        }
 
-		this.locked = [];
+        this.locked = [];
 
-		// Update data in storage
-		this.refreshStorage(oldOptions);
-	},
+        // Update data in storage
+        this.refreshStorage(oldOptions);
+    },
 
-	goToPage: function(page)
-	{
-		this.jukebox.search(page,
-			this.identifier,
-			this.select_fields,
-			this.search_value,
-			this.search_comparison,
-			this.search_field,
-			this.order_by,
-			this.result_count);
-	},
+    goToPage: function(page) {
+        this.jukebox.search(page,
+            this.identifier,
+            this.select_fields,
+            this.search_value,
+            this.search_comparison,
+            this.search_field,
+            this.order_by,
+            this.result_count);
+    },
 
-	sort: function(order_by)
-	{
-		this.jukebox.search(this.page,
-			this.identifier,
-			this.select_fields,
-			this.search_value,
-			this.search_comparison,
-			this.search_field,
-			order_by,
-			this.result_count);
-	},
+    sort: function(order_by) {
+        this.jukebox.search(this.page,
+            this.identifier,
+            this.select_fields,
+            this.search_value,
+            this.search_comparison,
+            this.search_field,
+            order_by,
+            this.result_count);
+    },
 
-	updateContent: function(DOM)
-	{
-		this.DOM = DOM;
-		if(this.reloadControllers)
-		{
-			var pagelistClass = this.rootCSS + "-search-pagelist",
-				contentClass = this.rootCSS + "-search";
+    updateContent: function(DOM) {
+        this.DOM = DOM;
+        if (this.reloadControllers) {
+            var pagelistClass = this.rootCSS + "-search-pagelist",
+                contentClass = this.rootCSS + "-search";
 
-			// Html structure
-			var mainTpl = new Template(this.template.main),
-				mainTplVars =
-				{
-					pagelistClass: pagelistClass,
-					contentClass: contentClass
-				},
-				search_page = mainTpl.evaluate(mainTplVars);
-			
-			this.DOM.update(search_page);
+            // Html structure
+            var mainTpl = new Template(this.template.main),
+                mainTplVars = {
+                    pagelistClass: pagelistClass,
+                    contentClass: contentClass
+                },
+                search_page = mainTpl.evaluate(mainTplVars);
 
-			// Display sliders and links and init sliders behavior
-			this.initAndDisplaySearchControllers(pagelistClass);
-			this.reloadControllers = false;
-		}
-		else
-		{
-			// Refresh displayed pages
-			this.generatePagesLinks();
+            this.DOM.update(search_page);
 
-			// Refresh slider position
-			for(var k in this.sliders)
-			{
-				if(typeof this.sliders[k].setValue === 'function')
-				{
-					this.locked[k] = true;
-					this.sliders[k].setValue(this.current_page);
-					this.locked[k] = false;
-				}
-			}
-		}
+            // Display sliders and links and init sliders behavior
+            this.initAndDisplaySearchControllers(pagelistClass);
+            this.reloadControllers = false;
+        } else {
+            // Refresh displayed pages
+            this.generatePagesLinks();
 
-		// Display search results and init dragabble items
-		this.initAndDisplaySearchResults();
-	},
+            // Refresh slider position
+            for (var k in this.sliders) {
+                if (typeof this.sliders[k].setValue === 'function') {
+                    this.locked[k] = true;
+                    this.sliders[k].setValue(this.current_page);
+                    this.locked[k] = false;
+                }
+            }
+        }
 
-	// Update sliders and pages
-	initAndDisplaySearchControllers: function(pagelistClass)
-	{
-		var sliderCSS = this.rootCSS + '-slider',
-			sliderCSS2 = this.rootCSS + '-search-slider',
-			handleCSS = sliderCSS + '-handle',
-			pageListCollection = this.DOM.select('.' + pagelistClass);
+        // Display search results and init dragabble items
+        this.initAndDisplaySearchResults();
+    },
 
-		// Only display slider and pages results links if nb pages > 1
-		if(this.total_results > 0 && this.page_count > 1)
-		{
-			// We have to specified a fixed width, 100% doesn't work : the slider is lost
-			var music_wrapper_width = this.DOM.up().getWidth();
+    // Update sliders and pages
+    initAndDisplaySearchControllers: function(pagelistClass) {
+        var sliderCSS = this.rootCSS + '-slider',
+            sliderCSS2 = this.rootCSS + '-search-slider',
+            handleCSS = sliderCSS + '-handle',
+            pageListCollection = this.DOM.select('.' + pagelistClass);
 
-			var sliderTpl = '' +
-			'<div class="'+sliderCSS2+'">' +
-				'<div class="'+sliderCSS+'" style="width:' + music_wrapper_width + 'px;">' +
-					'<div class="'+handleCSS+'"></div>' +
-				'</div>' +
-			'</div>';
-			var linksTpl = '<div class="'+this.rootCSS+'-search-page-links"></div>';
+        // Only display slider and pages results links if nb pages > 1
+        if (this.total_results > 0 && this.page_count > 1) {
+            // We have to specified a fixed width, 100% doesn't work : the slider is lost
+            var music_wrapper_width = this.DOM.up().getWidth();
 
-			// Display sliders and links
-			pageListCollection.each(function(s)
-			{
-				var replace = new Template(s.innerHTML).evaluate(
-				{
-					slider: sliderTpl,
-					links: linksTpl
-				});
-				s.update(replace);
-			});
-		}
-		else
-		{
-			pageListCollection.each(function(s)
-			{
-				s.update(); // Empty
-			});
-		}
+            var sliderTpl = '' +
+                '<div class="' + sliderCSS2 + '">' +
+                '<div class="' + sliderCSS + '" style="width:' + music_wrapper_width + 'px;">' +
+                '<div class="' + handleCSS + '"></div>' +
+                '</div>' +
+                '</div>';
+            var linksTpl = '<div class="' + this.rootCSS + '-search-page-links"></div>';
 
-		// Fill the pages array used by sliders
-		for(var k = 0; k < this.page_count; ++k)
-		{
-			this.pages.push(k + 1);
-		}
+            // Display sliders and links
+            pageListCollection.each(function(s) {
+                var replace = new Template(s.innerHTML).evaluate({
+                    slider: sliderTpl,
+                    links: linksTpl
+                });
+                s.update(replace);
+            });
+        } else {
+            pageListCollection.each(function(s) {
+                s.update(); // Empty
+            });
+        }
 
-		// Init the link list
-		this.generatePagesLinks();
+        // Fill the pages array used by sliders
+        for (var k = 0; k < this.page_count; ++k) {
+            this.pages.push(k + 1);
+        }
 
-		// Init each sliders behavior
-		var resultsSliders = this.DOM.select('.'+sliderCSS),
-			that = this,
-			i = 0;
-		resultsSliders.each(function(sliderBox)
-		{
-			var slider = new Control.Slider(sliderBox.down('.'+handleCSS), sliderBox,
-			{
-				range: $R(1, that.pages.length),
-				values: that.pages,
-				sliderValue: that.current_page,
-				id: i++,
-				timeout: null,
-				lastSelectedValue: null,
-				onSlide: function(value)
-				{
-					that.generatePagesLinks(value);
+        // Init the link list
+        this.generatePagesLinks();
 
-					// Update others sliders values by setting value with the current slider sliding value
-					for(var k = 0; k < that.sliders; ++k)
-					{
-						if(k != this.id)
-						{
-							that.locked[k] = true;
-							if(typeof that.sliders[k].setValue === 'function')
-							{
-								// Caution this instruction fire onChange slider event
-								that.sliders[k].setValue(value);
-							}
-							that.locked[k] = false;
-						}
-					}
+        // Init each sliders behavior
+        var resultsSliders = this.DOM.select('.' + sliderCSS),
+            that = this,
+            i = 0;
+        resultsSliders.each(function(sliderBox) {
+            var slider = new Control.Slider(sliderBox.down('.' + handleCSS), sliderBox, {
+                range: $R(1, that.pages.length),
+                values: that.pages,
+                sliderValue: that.current_page,
+                id: i++,
+                timeout: null,
+                lastSelectedValue: null,
+                onSlide: function(value) {
+                    that.generatePagesLinks(value);
 
-					// Auto page selection if stuck on a page
-					if(this.lastSelectedValue != value)
-					{
-						clearTimeout(this.timeout);
-						this.timeout = setTimeout(function()
-						{
-							that.goToPage(value);
-						}, 400);
-					}
+                    // Update others sliders values by setting value with the current slider sliding value
+                    for (var k = 0; k < that.sliders; ++k) {
+                        if (k != this.id) {
+                            that.locked[k] = true;
+                            if (typeof that.sliders[k].setValue === 'function') {
+                                // Caution this instruction fire onChange slider event
+                                that.sliders[k].setValue(value);
+                            }
+                            that.locked[k] = false;
+                        }
+                    }
 
-					this.lastSelectedValue = value;
-				},
-				onChange: function(value)
-				{
-					// Because we use multi slider we don't want to fire onChange event when sliding the other slider
-					if(!that.locked[this.id]) // Current slider not locked
-					{
-						clearTimeout(this.timeout);
-						if(that.current_page != value)
-						{
-							that.goToPage(value);
-						}
-					}
-				}
-			});
+                    // Auto page selection if stuck on a page
+                    if (this.lastSelectedValue != value) {
+                        clearTimeout(this.timeout);
+                        this.timeout = setTimeout(function() {
+                            that.goToPage(value);
+                        }, 400);
+                    }
 
-			// Workaround to get correct handle position, whether current tab is visible or not
-			// The following methods all return 0 when tab is created in background (display:none)
-			/*var h = sliderBox.down('.'+handleCSS);
+                    this.lastSelectedValue = value;
+                },
+                onChange: function(value) {
+                    // Because we use multi slider we don't want to fire onChange event when sliding the other slider
+                    if (!that.locked[this.id]) // Current slider not locked
+                    {
+                        clearTimeout(this.timeout);
+                        if (that.current_page != value) {
+                            that.goToPage(value);
+                        }
+                    }
+                }
+            });
+
+            // Workaround to get correct handle position, whether current tab is visible or not
+            // The following methods all return 0 when tab is created in background (display:none)
+            /*var h = sliderBox.down('.'+handleCSS);
 			console.log(h.getWidth());
 			console.log(h.measure('width'));
 			console.log(h.getLayout().get('width'));
 			console.log(h.clientWidth);
 			*/
-			// So we have to hard code the width specified in CSS .jukebox-slider-handle{}
-			slider.handleLength = 25;
-			slider.setValue(that.current_page); // refresh slider position (avoid bug when current_page > 1 on start in a hidden tab)
+            // So we have to hard code the width specified in CSS .jukebox-slider-handle{}
+            slider.handleLength = 25;
+            slider.setValue(that.current_page); // refresh slider position (avoid bug when current_page > 1 on start in a hidden tab)
 
-			that.sliders.push(slider);
-		});
-	},
+            that.sliders.push(slider);
+        });
+    },
 
-	declareTableHeader: function(tparent)
-	{
-		var firstSort = this.order_by.split(",")[0],
-			J = this.jukebox;
+    declareTableHeader: function(tparent) {
+        var firstSort = this.order_by.split(",")[0],
+            J = this.jukebox;
 
-		//-----
+        //-----
 
-		var that = this;
-		function manageSort(cell, column, sql)
-		{
-			var order = "DESC";
-			if(firstSort.indexOf(column) != -1)
-			{
-				cell.addClassName(that.rootCSS + "-search-sortcol");
-				if(firstSort.indexOf(order) == -1)
-				{
-					cell.addClassName(that.rootCSS + "-search-sortasc");
-					cell.removeClassName(that.rootCSS + "-search-sortdesc");
-				}
-				else
-				{
-					cell.removeClassName(that.rootCSS + "-search-sortasc");
-					cell.addClassName(that.rootCSS + "-search-sortdesc");
-					order = "ASC";
-				}
-			}
-			else
-			{
-				cell.removeClassName(that.rootCSS + "-search-sortcol");
-			}
-			sql = sql.replace('${ORDER}', order);
-			cell.on("click", that.sort.bind(that, sql));
-		}
+        var that = this;
 
-		var sql =
-		{
-			artist: 'artist COLLATE NOCASE ${ORDER}, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC',
-			album: 'album COLLATE NOCASE ${ORDER}, track DESC, title COLLATE NOCASE DESC',
-			title: 'title COLLATE NOCASE ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC',
-			track: 'track ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, title COLLATE NOCASE DESC',
-			genre: 'genre ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC',
-			duration: 'duration ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC'
-		};
+        function manageSort(cell, column, sql) {
+            var order = "DESC";
+            if (firstSort.indexOf(column) != -1) {
+                cell.addClassName(that.rootCSS + "-search-sortcol");
+                if (firstSort.indexOf(order) == -1) {
+                    cell.addClassName(that.rootCSS + "-search-sortasc");
+                    cell.removeClassName(that.rootCSS + "-search-sortdesc");
+                } else {
+                    cell.removeClassName(that.rootCSS + "-search-sortasc");
+                    cell.addClassName(that.rootCSS + "-search-sortdesc");
+                    order = "ASC";
+                }
+            } else {
+                cell.removeClassName(that.rootCSS + "-search-sortcol");
+            }
+            sql = sql.replace('${ORDER}', order);
+            cell.on("click", that.sort.bind(that, sql));
+        }
 
-		var tableHeadTpl = new Template(this.template.tableHead),
-			tableHeadTplVars = {root: this.rootCSS},
-			tr = tableHeadTpl.evaluate(tableHeadTplVars);
-		
-		tparent.insert(tr); // Inject template
+        var sql = {
+            artist: 'artist COLLATE NOCASE ${ORDER}, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC',
+            album: 'album COLLATE NOCASE ${ORDER}, track DESC, title COLLATE NOCASE DESC',
+            title: 'title COLLATE NOCASE ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC',
+            track: 'track ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, title COLLATE NOCASE DESC',
+            genre: 'genre ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC',
+            duration: 'duration ${ORDER}, artist COLLATE NOCASE DESC, album COLLATE NOCASE DESC, track DESC, title COLLATE NOCASE DESC'
+        };
 
-		// For each dom column present in template
-		tparent.select('th').each(function(th)
-		{
-			var classes = th.classNames();
+        var tableHeadTpl = new Template(this.template.tableHead),
+            tableHeadTplVars = {
+                root: this.rootCSS
+            },
+            tr = tableHeadTpl.evaluate(tableHeadTplVars);
 
-			// Check associated SQL and sort order
-			for(var column in sql)
-			{
-				var expectedCSS = that.rootCSS + '-search-' + column;
-				if(classes.include(expectedCSS)) // No column is mandatory in skin
-				{
-					manageSort(th, column, sql[column]);
-					break;
-				}
-			}
-		});
+        tparent.insert(tr); // Inject template
 
-		//-----
-		// Controls
-		// 
-		function funcRandom()
-		{
-			J.addSearchToPlayQueueRandom(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
-		}
-		function funcTop()
-		{
-			J.addSearchToPlayQueueTop(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
-		}
-		function funcBottom()
-		{
-			J.addSearchToPlayQueueBottom(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
-		}
-		
-		var controlsTh = tparent.down('.' + this.rootCSS + '-search-controls');
-		if(controlsTh) // Not mandatory in skin
-		{
-			var title = 'Add search to play queue [Full]'; // See jukebox.js : _addSearchToPlayQueue
-			if(this.search_comparison == 'like')
-			{
-				title = 'Add search to play queue [Current page]';
-			}
+        // For each dom column present in template
+        tparent.select('th').each(function(th) {
+            var classes = th.classNames();
 
-			this.createControlsCell(controlsTh, funcRandom, funcTop, funcBottom, title);
-		}
-	},
+            // Check associated SQL and sort order
+            for (var column in sql) {
+                var expectedCSS = that.rootCSS + '-search-' + column;
+                if (classes.include(expectedCSS)) // No column is mandatory in skin
+                {
+                    manageSort(th, column, sql[column]);
+                    break;
+                }
+            }
+        });
 
-	// Utility to create the 3 buttons in the last cell of each row (standards rows and header row of the table)
-	createControlsCell: function(cell, funcRandom, funcTop, funcBottom, title)
-	{
-		var addRandom = new Element('a').update('<span class="add-to-play-queue-rand"></span>'),
-			addTop = new Element('a').update('<span class="add-to-play-queue-top"></span>'),
-			addBottom = new Element('a').update('<span class="add-to-play-queue-bottom"></span>');
+        //-----
+        // Controls
+        // 
+        function funcRandom() {
+            J.addSearchToPlayQueueRandom(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
+        }
 
-		if(title)
-		{
-			addRandom.writeAttribute('title', title + ' [RANDOM]');
-			addTop.writeAttribute('title', title + ' [TOP]');
-			addBottom.writeAttribute('title', title + ' [BOTTOM]');
-		}
+        function funcTop() {
+            J.addSearchToPlayQueueTop(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
+        }
 
-		cell.insert(addTop).insert(
-		{
-			top: addRandom,
-			bottom: addBottom
-		});
+        function funcBottom() {
+            J.addSearchToPlayQueueBottom(that.search_value, that.search_comparison, that.search_field, that.order_by, that.first_result, that.result_count);
+        }
 
-		addRandom.on('click', funcRandom);
-		addTop.on('click', funcTop);
-		addBottom.on('click', funcBottom);
-	},
+        var controlsTh = tparent.down('.' + this.rootCSS + '-search-controls');
+        if (controlsTh) // Not mandatory in skin
+        {
+            var title = 'Add search to play queue [Full]'; // See jukebox.js : _addSearchToPlayQueue
+            if (this.search_comparison == 'like') {
+                title = 'Add search to play queue [Current page]';
+            }
 
-	initAndDisplaySearchResults: function()
-	{
-		var tbody = new Element('tbody'),
-			count = this.result_count,
-			$content = this.DOM.down('.' + this.rootCSS + "-search"),
-			isOdd = true,
-			style,
-			J = this.jukebox;
+            this.createControlsCell(controlsTh, funcRandom, funcTop, funcBottom, title);
+        }
+    },
 
-		function doSearch(search, category, mouseEvent)
-		{
-			var focusTab = (mouseEvent.which == 2 || mouseEvent.ctrlKey) ? false : true; // Open in background with middle clic or ctrl+clic
-			J.search(1, null, null, search.toString(), 'equal', category, 'artist,album,track,title', count, focusTab);
-		}
-		function createLink(text, search, category)
-		{
-			var item = new Element('a', {href: 'javascript:;'}).update(text);
-			item.on('click', function(evt)
-			{
-				doSearch(search, category, evt);
-			});
-			return item;
-		}
+    // Utility to create the 3 buttons in the last cell of each row (standards rows and header row of the table)
+    createControlsCell: function(cell, funcRandom, funcTop, funcBottom, title) {
+        var addRandom = new Element('a').update('<span class="add-to-play-queue-rand"></span>'),
+            addTop = new Element('a').update('<span class="add-to-play-queue-top"></span>'),
+            addBottom = new Element('a').update('<span class="add-to-play-queue-bottom"></span>');
 
-		if(this.total_results > 0)
-		{
-			var table = new Element('table').addClassName(this.rootCSS + '-search-table'),
-				thead = new Element('thead'),
-				tfoot = new Element('tfoot');
+        if (title) {
+            addRandom.writeAttribute('title', title + ' [RANDOM]');
+            addTop.writeAttribute('title', title + ' [TOP]');
+            addBottom.writeAttribute('title', title + ' [BOTTOM]');
+        }
 
-			this.declareTableHeader(thead);
-			this.declareTableHeader(tfoot);
+        cell.insert(addTop).insert({
+            top: addRandom,
+            bottom: addBottom
+        });
 
-			var possibleColumns = ['artist', 'album', 'title', 'track', 'genre', 'duration', 'controls'],
-				columns = [],
-				that = this;
+        addRandom.on('click', funcRandom);
+        addTop.on('click', funcTop);
+        addBottom.on('click', funcBottom);
+    },
 
-			// Get columns according to current thead definition
-			thead.select('th').each(function(th)
-			{
-				var classes = th.classNames();
-				for(var i = 0; i < possibleColumns.length; ++i)
-				{
-					var column = possibleColumns[i];
-					if(classes.include(that.rootCSS + "-search-" + column))
-					{
-						columns.push(column);
-						break;
-					}
-				}
-			});
+    initAndDisplaySearchResults: function() {
+        var tbody = new Element('tbody'),
+            count = this.result_count,
+            $content = this.DOM.down('.' + this.rootCSS + "-search"),
+            isOdd = true,
+            style,
+            J = this.jukebox;
 
-			this.server_results.each(function(s)
-			{
-				style = that.rootCSS + "-search-" + (isOdd ? "rowodd" : "roweven");
-				isOdd = !isOdd;
+        function doSearch(search, category, mouseEvent) {
+            var focusTab = (mouseEvent.which == 2 || mouseEvent.ctrlKey) ? false : true; // Open in background with middle clic or ctrl+clic
+            J.search(1, null, null, search.toString(), 'equal', category, 'artist,album,track,title', count, focusTab);
+        }
 
-				var tr = new Element('tr').addClassName(that.rootCSS + '-search-row ' + style);
-				tr.store('song', s); // For drag'n drop to playqueue
+        function createLink(text, search, category) {
+            var item = new Element('a', {
+                href: 'javascript:;'
+            }).update(text);
+            item.on('click', function(evt) {
+                doSearch(search, category, evt);
+            });
+            return item;
+        }
 
-				for(var i = 0; i < columns.length; ++i) // Only display specified thead columns
-				{
-					var td = new Element('td');
-					switch(columns[i])
-					{
-						case 'artist':
-							var artist = createLink(s.artist, s.artist, 'artist');
-							td.update(artist);
-							break;
-						case 'album':
-							var album = createLink(s.album, s.album, 'album');
-							td.update(album);
-							break;
-						case 'title':
-							td.update(s.title);
-							break;
-						case 'track':
-							td.update(s.track);
-							break;
-						case 'genre':
-							if(genres[s.genre])
-							{
-								var genre = createLink(genres[s.genre], s.genre, 'genre');
-								td.update(genre);
-							}							
-							break;
-						case 'duration':
-							td.update(FormatTime(s.duration));
-							break;
-						case 'controls':
-							that.createControlsCell(td,
-								function funcRandom(){J.addToPlayQueueRandom(s.mid);},
-								function funcTop(){J.addToPlayQueueTop(s.mid);},
-								function funcBottom(){J.addToPlayQueueBottom(s.mid);}
-							);
-							break;
-					}
-					tr.insert(td);
-				}
+        if (this.total_results > 0) {
+            var table = new Element('table').addClassName(this.rootCSS + '-search-table'),
+                thead = new Element('thead'),
+                tfoot = new Element('tfoot');
 
-				tbody.insert(tr);
+            this.declareTableHeader(thead);
+            this.declareTableHeader(tfoot);
 
-				new Draggable(tr,
-				{
-					scroll: window,
-					ghosting: true,
-					revert: function(element)
-					{
-						element.style.position = "relative";
-					}
-				});
-			});
+            var possibleColumns = ['artist', 'album', 'title', 'track', 'genre', 'duration', 'controls'],
+                columns = [],
+                that = this;
 
-			table.insert(tbody).insert(
-			{
-				top: thead,
-				bottom: tfoot
-			});
+            // Get columns according to current thead definition
+            thead.select('th').each(function(th) {
+                var classes = th.classNames();
+                for (var i = 0; i < possibleColumns.length; ++i) {
+                    var column = possibleColumns[i];
+                    if (classes.include(that.rootCSS + "-search-" + column)) {
+                        columns.push(column);
+                        break;
+                    }
+                }
+            });
 
-			// Replace the DOM
-			$content.update(table);
+            this.server_results.each(function(s) {
+                style = that.rootCSS + "-search-" + (isOdd ? "rowodd" : "roweven");
+                isOdd = !isOdd;
 
-			this.tableKit = new TableKit(table,
-			{
-				sortable: false,
-				editable: false,
-				trueResize: true,
-				keepWidth: true,
+                var tr = new Element('tr').addClassName(that.rootCSS + '-search-row ' + style);
+                tr.store('song', s); // For drag'n drop to playqueue
 
-				// Fix glitch issue when clicking one of the "Add search to play queue [Current page|Full]" button
-				// Happens because of tablekit.js generating a huge <div class="resize-handle"> on mousedown
-				// Which leads to a scrollbar in the browser -> mouse no more over the same button -> no click event
-				// Anyway we don't need showHandle to true because we already override the resize-handle css...
-				showHandle: false
-			});
-		}
-		else // this.total_results == 0
-		{
-			$content.update("No results found");
-		}
-	},
+                for (var i = 0; i < columns.length; ++i) // Only display specified thead columns
+                {
+                    var td = new Element('td');
+                    switch (columns[i]) {
+                        case 'artist':
+                            var artist = createLink(s.artist, s.artist, 'artist');
+                            td.update(artist);
+                            break;
+                        case 'album':
+                            var album = createLink(s.album, s.album, 'album');
+                            td.update(album);
+                            break;
+                        case 'title':
+                            td.update(s.title);
+                            break;
+                        case 'track':
+                            td.update(s.track);
+                            break;
+                        case 'genre':
+                            if (genres[s.genre]) {
+                                var genre = createLink(genres[s.genre], s.genre, 'genre');
+                                td.update(genre);
+                            }
+                            break;
+                        case 'duration':
+                            td.update(FormatTime(s.duration));
+                            break;
+                        case 'controls':
+                            that.createControlsCell(td,
+                                function funcRandom() {
+                                    J.addToPlayQueueRandom(s.mid);
+                                },
+                                function funcTop() {
+                                    J.addToPlayQueueTop(s.mid);
+                                },
+                                function funcBottom() {
+                                    J.addToPlayQueueBottom(s.mid);
+                                }
+                            );
+                            break;
+                    }
+                    tr.insert(td);
+                }
 
-	generatePagesLinks: function(currentSelection)
-	{
-		var i,
-			len,
-			pages = [],
-			threshold = 5, // TODO put this constant in a javascript config file
-			currentPage = this.current_page,
-			nbPages = this.page_count;
+                tbody.insert(tr);
 
-		if(typeof currentSelection == "undefined")
-		{
-			currentSelection = this.current_page;
-		}
+                new Draggable(tr, {
+                    scroll: window,
+                    ghosting: true,
+                    revert: function(element) {
+                        element.style.position = "relative";
+                    }
+                });
+            });
 
-		// If nb pages to display > 25 we show only first pages, current selection page, and last pages links
-		if(nbPages > 25)
-		{
-			// TODO put the + 2 in a javascript config file
-			for(i = 1, len = Math.ceil(threshold) + 2; i < len; ++i)
-			{
-				if(i > 0 && i <= nbPages)
-				{
-					pages.push(i);
-				}
-			}
-		}
-		else
-		{
-			for(i = 1; i <= nbPages; ++i)
-			{
-				pages.push(i);
-			}
-		}
+            table.insert(tbody).insert({
+                top: thead,
+                bottom: tfoot
+            });
 
-		// If we want to add focus on another variable we just need to add an entry in this array
-		var focusElements = [];
-		focusElements[0] = currentPage;
-		
-		// Uncomment the next line to show 3 pages links around slider selection page
-		// focusElements[1] = currentSelection;
-		
-		pages.push(currentSelection);
-		
-		// Hide too far pages algorithm
-		for(var k = 0; k < focusElements.length; ++k)
-		{
-			var currentCount = Math.ceil(threshold / 2),
-				currentCount2 = currentCount;
+            // Replace the DOM
+            $content.update(table);
 
-			for(i = focusElements[k] - currentCount; i < focusElements[k]; ++i)
-			{
-				if(i > 0 && i <= nbPages)
-				{
-					currentCount--;
-					pages.push(i);
-				}
-			}
+            this.tableKit = new TableKit(table, {
+                sortable: false,
+                editable: false,
+                trueResize: true,
+                keepWidth: true,
 
-			pages.push(focusElements[k]);
+                // Fix glitch issue when clicking one of the "Add search to play queue [Current page|Full]" button
+                // Happens because of tablekit.js generating a huge <div class="resize-handle"> on mousedown
+                // Which leads to a scrollbar in the browser -> mouse no more over the same button -> no click event
+                // Anyway we don't need showHandle to true because we already override the resize-handle css...
+                showHandle: false
+            });
+        } else // this.total_results == 0
+        {
+            $content.update("No results found");
+        }
+    },
 
-			for(i = focusElements[k] + 1, len = focusElements[k] + Math.ceil(threshold / 2) + 1; i < len; ++i)
-			{
-				if(i > 0 && i <= nbPages)
-				{
-					currentCount2--;
-					pages.push(i);
-				}
-			}
+    generatePagesLinks: function(currentSelection) {
+        var i,
+            len,
+            pages = [],
+            threshold = 5, // TODO put this constant in a javascript config file
+            currentPage = this.current_page,
+            nbPages = this.page_count;
 
-			// Add missed before pages at the end of the array
-			if(currentCount > 0)
-			{
-				for(i = focusElements[k] + Math.ceil(threshold / 2), len = focusElements[k] + Math.ceil(threshold); i < len; ++i)
-				{
-					if(i > 0 && i <= nbPages)
-					{
-						pages.push(i);
-					}
-				}
-			}
-			else if(currentCount2 > 0)
-			{
-				for(i = focusElements[k] - Math.ceil(threshold), len = focusElements[k] + Math.ceil(threshold / 2); i < len; ++i)
-				{
-					if(i > 0 && i <= nbPages)
-					{
-						pages.push(i);
-					}
-				}
-			}
-		}
+        if (typeof currentSelection == "undefined") {
+            currentSelection = this.current_page;
+        }
 
-		for(i = nbPages - Math.ceil(threshold); i <= nbPages; ++i)
-		{
-			if(i > 0 && i <= nbPages)
-			{
-				pages.push(i);
-			}
-		}
+        // If nb pages to display > 25 we show only first pages, current selection page, and last pages links
+        if (nbPages > 25) {
+            // TODO put the + 2 in a javascript config file
+            for (i = 1, len = Math.ceil(threshold) + 2; i < len; ++i) {
+                if (i > 0 && i <= nbPages) {
+                    pages.push(i);
+                }
+            }
+        } else {
+            for (i = 1; i <= nbPages; ++i) {
+                pages.push(i);
+            }
+        }
 
-		pages = SortUnique(pages);
+        // If we want to add focus on another variable we just need to add an entry in this array
+        var focusElements = [];
+        focusElements[0] = currentPage;
 
-		var tab = this;
-		function createLink(num, className)
-		{
-			var item = new Element('a', {href: 'javascript:;'}).addClassName(tab.rootCSS + '-' + className).update(num + " ");
-			item.on('click', function()
-			{
-				tab.goToPage(num);
-			});
-			return item;
-		}
+        // Uncomment the next line to show 3 pages links around slider selection page
+        // focusElements[1] = currentSelection;
 
-		this.DOM.select('.' + this.rootCSS + '-search-page-links').each(function(s)
-		{
-			s.update(); // Empty
+        pages.push(currentSelection);
 
-			var lastdisplayedValue = null;
-			for(i = 0; i < pages.length; ++i)
-			{
-				if(lastdisplayedValue != null && lastdisplayedValue != pages[i] - 1)
-				{
-					s.insert(" ..... ");
-				}
+        // Hide too far pages algorithm
+        for (var k = 0; k < focusElements.length; ++k) {
+            var currentCount = Math.ceil(threshold / 2),
+                currentCount2 = currentCount;
 
-				var className;
-				if(pages[i] == currentPage)
-				{
-					className = "search-page-link-current-page";
-				}
-				else if(pages[i] == currentSelection)
-				{
-					className = "search-page-link-current-selection";
-				}
-				else
-				{
-					className = "search-page-link";
-				}
+            for (i = focusElements[k] - currentCount; i < focusElements[k]; ++i) {
+                if (i > 0 && i <= nbPages) {
+                    currentCount--;
+                    pages.push(i);
+                }
+            }
 
-				var link = createLink(pages[i], className);
-				s.insert(link);
+            pages.push(focusElements[k]);
 
-				lastdisplayedValue = pages[i];
-			}
-		});
-	}
+            for (i = focusElements[k] + 1, len = focusElements[k] + Math.ceil(threshold / 2) + 1; i < len; ++i) {
+                if (i > 0 && i <= nbPages) {
+                    currentCount2--;
+                    pages.push(i);
+                }
+            }
+
+            // Add missed before pages at the end of the array
+            if (currentCount > 0) {
+                for (i = focusElements[k] + Math.ceil(threshold / 2), len = focusElements[k] + Math.ceil(threshold); i < len; ++i) {
+                    if (i > 0 && i <= nbPages) {
+                        pages.push(i);
+                    }
+                }
+            } else if (currentCount2 > 0) {
+                for (i = focusElements[k] - Math.ceil(threshold), len = focusElements[k] + Math.ceil(threshold / 2); i < len; ++i) {
+                    if (i > 0 && i <= nbPages) {
+                        pages.push(i);
+                    }
+                }
+            }
+        }
+
+        for (i = nbPages - Math.ceil(threshold); i <= nbPages; ++i) {
+            if (i > 0 && i <= nbPages) {
+                pages.push(i);
+            }
+        }
+
+        pages = SortUnique(pages);
+
+        var tab = this;
+
+        function createLink(num, className) {
+            var item = new Element('a', {
+                href: 'javascript:;'
+            }).addClassName(tab.rootCSS + '-' + className).update(num + " ");
+            item.on('click', function() {
+                tab.goToPage(num);
+            });
+            return item;
+        }
+
+        this.DOM.select('.' + this.rootCSS + '-search-page-links').each(function(s) {
+            s.update(); // Empty
+
+            var lastdisplayedValue = null;
+            for (i = 0; i < pages.length; ++i) {
+                if (lastdisplayedValue != null && lastdisplayedValue != pages[i] - 1) {
+                    s.insert(" ..... ");
+                }
+
+                var className;
+                if (pages[i] == currentPage) {
+                    className = "search-page-link-current-page";
+                } else if (pages[i] == currentSelection) {
+                    className = "search-page-link-current-selection";
+                } else {
+                    className = "search-page-link";
+                }
+
+                var link = createLink(pages[i], className);
+                s.insert(link);
+
+                lastdisplayedValue = pages[i];
+            }
+        });
+    }
 });

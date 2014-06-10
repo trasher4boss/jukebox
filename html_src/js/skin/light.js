@@ -1,21 +1,17 @@
 /* jshint multistr: true, sub: true */
 /* global Jukebox */
 
-Jukebox.UI.skins["light"] =
-{
-	params:
-	{
-		allowTabs: false,
-		dragdrop: false,
-		playQueueNode: 'tbody',
-		songNode: 'tr'
-	},
-	defaultTheme: 'white',
-	themes: ['white', 'blue'],
-	templates:
-	{
-		player:
-'<div class="#{root} #{root}-theme-#{theme}">\
+Jukebox.UI.skins["light"] = {
+    params: {
+        allowTabs: false,
+        dragdrop: false,
+        playQueueNode: 'tbody',
+        songNode: 'tr'
+    },
+    defaultTheme: 'white',
+    themes: ['white', 'blue'],
+    templates: {
+        player: '<div class="#{root} #{root}-theme-#{theme}">\
 <table class="#{root}-main">\
 <tr>\
 	<td class="#{root}-activity"></td>\
@@ -55,17 +51,15 @@ Jukebox.UI.skins["light"] =
 	<div class="#{root}-playqueue-content"></div>\
 </div>\
 </div>',
-		song:
-'<div class="#{root}-song">\
+        song: '<div class="#{root}-song">\
 <div class="#{root}-song-title">#{title}</div>\
 <div>\
 	<a class="#{root}-song-artist" href="javascript:;">#{artist}</a> - \
 	<a class="#{root}-song-album" href="javascript:;">#{album}</a>\
 </div>\
 </div>',
-		playQueue: '',
-		playQueueSong:
-'<tr class="#{root}-playqueue-#{index}">\
+        playQueue: '',
+        playQueueSong: '<tr class="#{root}-playqueue-#{index}">\
 <td>#{index}</td>\
 <td>\
 	<a href="javascript:;">#{artist}</a> - \
@@ -74,5 +68,5 @@ Jukebox.UI.skins["light"] =
 </td>\
 <td>#{duration}</td>\
 </tr>'
-	}
+    }
 };

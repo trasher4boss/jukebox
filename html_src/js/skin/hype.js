@@ -1,21 +1,17 @@
 /* jshint multistr: true, sub: true */
 /* global Jukebox */
 
-Jukebox.UI.skins["hype"] =
-{
-	params:
-	{
-		allowTabs: false,
-		dragdrop: false,
-		playQueueNode: 'tbody',
-		songNode: 'tr'
-	},
-	defaultTheme: 'white',
-	themes: ['white', 'blue'],
-	templates:
-	{
-		player:
-'<div class="#{root} #{root}-theme-#{theme}">\
+Jukebox.UI.skins["hype"] = {
+    params: {
+        allowTabs: false,
+        dragdrop: false,
+        playQueueNode: 'tbody',
+        songNode: 'tr'
+    },
+    defaultTheme: 'white',
+    themes: ['white', 'blue'],
+    templates: {
+        player: '<div class="#{root} #{root}-theme-#{theme}">\
 <div class="#{root}-main">\
 <div class="#{root}-main-titlebar">\
 <table class="#{root}-main-titlebar">\
@@ -93,17 +89,15 @@ Home made jukebox over streaming\
 	<div class="#{root}-playqueue-content"></div>\
 </div>\
 </div>',
-		song:
-'<div class="#{root}-song">\
+        song: '<div class="#{root}-song">\
 <div class="#{root}-song-title">#{title}</div>\
 <div>\
 	<a class="#{root}-song-artist" href="javascript:;">#{artist}</a> - \
 	<a class="#{root}-song-album" href="javascript:;">#{album}</a>\
 </div>\
 </div>',
-		playQueue: '',
-		playQueueSong:
-'<tr class="#{root}-playqueue-#{index}">\
+        playQueue: '',
+        playQueueSong: '<tr class="#{root}-playqueue-#{index}">\
 <td>#{index}</td>\
 <td>\
 	<a href="javascript:;">#{artist}</a> - \
@@ -112,5 +106,5 @@ Home made jukebox over streaming\
 </td>\
 <td>#{duration}</td>\
 </tr>'
-	}
+    }
 };

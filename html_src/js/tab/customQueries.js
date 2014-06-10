@@ -1,17 +1,14 @@
 /* jshint multistr:true */
 /* global Action, Query, Notifications, sendQueryProxy */
 
-this.CustomQueriesTab = Class.create(Tab,
-{
-	initialize: function(rootCSS)
-	{
-		this.name = "Custom queries";
-		this.rootCSS = rootCSS;
-	},
+this.CustomQueriesTab = Class.create(Tab, {
+    initialize: function(rootCSS) {
+        this.name = "Custom queries";
+        this.rootCSS = rootCSS;
+    },
 
-	updateContent: function(DOM)
-	{
-		var custom_queries_display = '\
+    updateContent: function(DOM) {
+        var custom_queries_display = '\
 		<h1>Custom Json Query</h1>\
 		<table width="100%">\
 		<tr>\
@@ -45,150 +42,130 @@ this.CustomQueriesTab = Class.create(Tab,
 			<td><input type="button" value="send custom query"/></td>\
 		</tr>\
 		</table>';
-		DOM.update(custom_queries_display);
+        DOM.update(custom_queries_display);
 
-		var $textarea = DOM.down('textarea'),
-			query,
-			actions;
+        var $textarea = DOM.down('textarea'),
+            query,
+            actions;
 
-		//----------
-		// Combobox
+        //----------
+        // Combobox
 
-		var $select = DOM.down('select');
-		$select.on("change", function fillCustomJsonQuery()
-		{
-			var opts = {},
-				value = this.value; // this.options[this.selectedIndex].value;
+        var $select = DOM.down('select');
+        $select.on("change", function fillCustomJsonQuery() {
+            var opts = {},
+                value = this.value; // this.options[this.selectedIndex].value;
 
-			switch(value)
-			{
-				case "dummy":
-					return false;
-				case "clear_form":
-					$textarea.value = '';
-					this.selectedIndex = 1;
-					return false;
-				case "add_to_play_queue":
-				case "remove_from_play_queue":
-				case "move_in_play_queue":
-					opts =
-					{
-						mid: 123,
-						play_queue_index: 1
-					};
-					break;
-				case "create_user":
-					opts =
-					{
-						nickname: "pseudo",
-						password: "xxxxxx"
-					};
-					break;
-				case "validate_user":
-					opts =
-					{
-						nickname: "pseudo"
-					};
-					break;
-				case "change_user_password":
-					opts =
-					{
-						nickname: "pseudo",
-						old_password: "xxxxxx",
-						new_password: "xxxxxx",
-						new_password2: "xxxxxx"
-					};
-					break;
-				case "get_user_informations":
-					opts =
-					{
-					};
-					break;
-				case "join_channel":
-					opts =
-					{
-						channel: "trashman"
-					};
-					break;
-				case "get_news":
-					opts =
-					{
-						first_result: 0,
-						result_count: 5
-					};
-					break;
-				case "search":
-					opts =
-					{
-						name:"search",
-						search_value:"muse",
-						search_comparison:"like",
-						search_field:"artist",
-						order_by:"mid,artist,album,track,title",
-						select_fields:"mid,title,album,artist,track,genre,duration",
-						first_result:0,
-						result_count:20,
-						identifier:null,
-						select:false
-					};
-					break;
-			}
-			if(value == "move_in_play_queue")
-			{
-				opts.new_play_queue_index = 0;
-			}
+            switch (value) {
+                case "dummy":
+                    return false;
+                case "clear_form":
+                    $textarea.value = '';
+                    this.selectedIndex = 1;
+                    return false;
+                case "add_to_play_queue":
+                case "remove_from_play_queue":
+                case "move_in_play_queue":
+                    opts = {
+                        mid: 123,
+                        play_queue_index: 1
+                    };
+                    break;
+                case "create_user":
+                    opts = {
+                        nickname: "pseudo",
+                        password: "xxxxxx"
+                    };
+                    break;
+                case "validate_user":
+                    opts = {
+                        nickname: "pseudo"
+                    };
+                    break;
+                case "change_user_password":
+                    opts = {
+                        nickname: "pseudo",
+                        old_password: "xxxxxx",
+                        new_password: "xxxxxx",
+                        new_password2: "xxxxxx"
+                    };
+                    break;
+                case "get_user_informations":
+                    opts = {};
+                    break;
+                case "join_channel":
+                    opts = {
+                        channel: "trashman"
+                    };
+                    break;
+                case "get_news":
+                    opts = {
+                        first_result: 0,
+                        result_count: 5
+                    };
+                    break;
+                case "search":
+                    opts = {
+                        name: "search",
+                        search_value: "muse",
+                        search_comparison: "like",
+                        search_field: "artist",
+                        order_by: "mid,artist,album,track,title",
+                        select_fields: "mid,title,album,artist,track,genre,duration",
+                        first_result: 0,
+                        result_count: 20,
+                        identifier: null,
+                        select: false
+                    };
+                    break;
+            }
+            if (value == "move_in_play_queue") {
+                opts.new_play_queue_index = 0;
+            }
 
-			actions = value == "empty" ? [] : [new Action(value, opts)];
-			query = new Query(1317675258, actions);
-			$textarea.value = JSON.stringify(query.valueOf(), null, "\t"); // query.toJSON(); doesn't support custom indentation
-			this.selectedIndex = 1;
+            actions = value == "empty" ? [] : [new Action(value, opts)];
+            query = new Query(1317675258, actions);
+            $textarea.value = JSON.stringify(query.valueOf(), null, "\t"); // query.toJSON(); doesn't support custom indentation
+            this.selectedIndex = 1;
 
-			return false; // Stop event
-		});
+            return false; // Stop event
+        });
 
-		//----------
-		// Button
+        //----------
+        // Button
 
-		var $input = DOM.down('input');
-		$input.on("click", function checkAndSendJson()
-		{
-			// Check if the textarea is filled
-			if($textarea.value === '')
-			{
-				Notifications.Display(Notifications.LEVELS.warning, 'Please fill the textarea');
-				return;
-			}
+        var $input = DOM.down('input');
+        $input.on("click", function checkAndSendJson() {
+            // Check if the textarea is filled
+            if ($textarea.value === '') {
+                Notifications.Display(Notifications.LEVELS.warning, 'Please fill the textarea');
+                return;
+            }
 
-			// Check if the textarea contains a valid json query
-			if($textarea.value.isJSON())
-			{
-				var json = $textarea.value.evalJSON();
-				if(json && json.action)
-				{
-					query = new Query(json.timestamp ? json.timestamp : 0);
-					if(Object.isArray(json.action))
-					{
-						actions = json.action;
-					}
-					else
-					{
-						actions = [json.action];
-					}
+            // Check if the textarea contains a valid json query
+            if ($textarea.value.isJSON()) {
+                var json = $textarea.value.evalJSON();
+                if (json && json.action) {
+                    query = new Query(json.timestamp ? json.timestamp : 0);
+                    if (Object.isArray(json.action)) {
+                        actions = json.action;
+                    } else {
+                        actions = [json.action];
+                    }
 
-					for(var i = 0; i < actions.length; ++i)
-					{
-						var action = new Action(actions[i].name, actions[i]);
-						query.addAction(action);
-					}
+                    for (var i = 0; i < actions.length; ++i) {
+                        var action = new Action(actions[i].name, actions[i]);
+                        query.addAction(action);
+                    }
 
-					sendQueryProxy(query);
-				}  else if (json && json.search){
-					query = new Query(json.timestamp ? json.timestamp : 0);
-					var search = new Action(json.search.name, json.search);
-					query.addAction(search);
-					sendQueryProxy(query);
-				}
-			}
-		});
-	}
+                    sendQueryProxy(query);
+                } else if (json && json.search) {
+                    query = new Query(json.timestamp ? json.timestamp : 0);
+                    var search = new Action(json.search.name, json.search);
+                    query.addAction(search);
+                    sendQueryProxy(query);
+                }
+            }
+        });
+    }
 });

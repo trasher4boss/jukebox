@@ -1,19 +1,15 @@
 /* jshint multistr: true, sub: true */
 /* global Jukebox */
 
-Jukebox.UI.skins["default"] =
-{
-	params:
-	{
-		allowTabs: true,
-		dragdrop: true,
-		playQueueNode: 'ul',
-		songNode: 'li'
-	},
-	templates:
-	{
-		player:
-'<div class="#{root}">\
+Jukebox.UI.skins["default"] = {
+    params: {
+        allowTabs: true,
+        dragdrop: true,
+        playQueueNode: 'ul',
+        songNode: 'li'
+    },
+    templates: {
+        player: '<div class="#{root}">\
 <div class="#{root}-header">\
 	<div class="#{root}-user-header-login">\
 	#{welcomeLabel} <span class="#{root}-user-display">#{user}</span> \
@@ -114,14 +110,12 @@ Jukebox.UI.skins["default"] =
 	<br clear="all" />\
 </span>\
 </div>',
-		song:
-'<p class="#{root}-song">\
+        song: '<p class="#{root}-song">\
 <a class="#{root}-song-artist" href="javascript:;">#{artist}</a> - \
 <a class="#{root}-song-album" href="javascript:;">#{album}</a> - \
 <span class="#{root}-song-title">#{title}</span>\
 </p>',
-		playQueue:
-'<li class="#{root}-playqueue-first #{root}-playqueue-droppable">#{playQueueLabel}\
+        playQueue: '<li class="#{root}-playqueue-first #{root}-playqueue-droppable">#{playQueueLabel}\
 <div>\
 	<span class="#{root}-listening-ico"></span>\
 	<span class="#{root}-listening-count">#{listenersCount}</span>\
@@ -129,8 +123,7 @@ Jukebox.UI.skins["default"] =
 <a><span class="#{root}-playqueue-shuffle"></span></a>\
 <a><span class="#{root}-playqueue-delete"></span></a>\
 </li>',
-		playQueueSong:
-'<li class="#{root}-playqueue-#{index} #{root}-playqueue-droppable">\
+        playQueueSong: '<li class="#{root}-playqueue-#{index} #{root}-playqueue-droppable">\
 <div class="#{root}-playqueue-song-#{index} #{root}-playqueue-draggable">\
 	<div class="#{root}-playqueue-handle-#{index} #{root}-playqueue-handle">\
 		<a href="javascript:;">#{artist}</a> - \
@@ -142,12 +135,9 @@ Jukebox.UI.skins["default"] =
 	<a><span class="#{root}-playqueue-delete"></span></a>\
 </div>\
 </li>',
-		tabs:
-		{
-			AccountTab:
-			{
-				main:
-'<h2>Informations personnelles de #{user}</h2> <br/> \
+        tabs: {
+            AccountTab: {
+                main: '<h2>Informations personnelles de #{user}</h2> <br/> \
 <div class="#{root}-account-informations">\
 	<ul>\
 		<li><b>user:</b>#{user}</li>\
@@ -170,23 +160,16 @@ Jukebox.UI.skins["default"] =
 <input class="#{root}-account-change-password-submit" type="submit" value="Valider"/></br> \
 </div> \
 <div class="#{root}-account-available-rights"></div>',
-				rights_controller:
-'TODO : Right controller part',
-				rights_header:
-'TODO right header part',
-				rights_list:
-'TODO list rights',
-				rights_footer:
-'TODO footer rights'
-			},
-			UploadTab:
-			{
-				main:
-'<div class="#{root}-file-uploader"></div>\
+                rights_controller: 'TODO : Right controller part',
+                rights_header: 'TODO right header part',
+                rights_list: 'TODO list rights',
+                rights_footer: 'TODO footer rights'
+            },
+            UploadTab: {
+                main: '<div class="#{root}-file-uploader"></div>\
 <h2>#{uploadedFilesLabel}</h2>\
 <div class="#{root}-uploaded-files"></div>',
-				tableController:
-'<select class="#{root}-upload-global-action-select">\
+                tableController: '<select class="#{root}-upload-global-action-select">\
 	<option value="artist">Artist</option>\
 	<option value="album">Album</option>\
 	<option value="year">Year</option>\
@@ -208,8 +191,7 @@ Jukebox.UI.skins["default"] =
 <input class="#{root}-upload-global-min-idx" type="text" value="min" size=4/>\
 <input class="#{root}-upload-global-max-idx" type="text" value="max" size=4/>\
 <input class="#{root}-upload-global-submit" type="submit" value="Appliquer" />',
-				tableHead:
-'<tr>\
+                tableHead: '<tr>\
 	<th class="#{root}-upload-selector">\
 		<input class="#{root}-upload-selector-checkbox" type="checkbox" />\
 	</th>\
@@ -223,8 +205,7 @@ Jukebox.UI.skins["default"] =
 	<th class="#{root}-upload-genre">Genre</th>\
 	<th class="#{root}-upload-actions">Actions</th>\
 </tr>',
-				tableBody:
-'<tr id="#{rowId}">\
+                tableBody: '<tr id="#{rowId}">\
 	<td class="#{root}-upload-cell-static"><input class="#{root}-upload-cell-checkbox" type="checkbox" /></td>\
 	<td class="#{root}-upload-cell-static #{root}-upload-cell-filename">#{filename}</td>\
 	<td class="#{root}-upload-cell-artist">#{artist}</td>\
@@ -240,11 +221,9 @@ Jukebox.UI.skins["default"] =
 		<a href="javascript:;" class="#{root}-uploaded-file-validate">Validate</a>\
 	</td>\
 </tr>'
-			},
-			SearchTab:
-			{
-				main:
-'<div class="#{pagelistClass}">\
+            },
+            SearchTab: {
+                main: '<div class="#{pagelistClass}">\
 	\\#{slider}\
 	\\#{links}\
 </div>\
@@ -253,8 +232,7 @@ Jukebox.UI.skins["default"] =
 	\\#{links}\
 	\\#{slider}\
 </div>',
-				tableHead:
-'<tr>\
+                tableHead: '<tr>\
 	<th class="#{root}-search-artist">Artist</th>\
 	<th class="#{root}-search-album">Album</th>\
 	<th class="#{root}-search-title">Title</th>\
@@ -263,7 +241,7 @@ Jukebox.UI.skins["default"] =
 	<th class="#{root}-search-duration">Duration</th>\
 	<th class="#{root}-search-controls"></th>\
 </tr>'
-			}
-		}
-	}
+            }
+        }
+    }
 };
