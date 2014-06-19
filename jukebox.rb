@@ -105,12 +105,12 @@ main.addAuth() { |s, req, user, pass|
   user_agent = "";
   user_agent = req.options["User-Agent"] if( req.options["User-Agent"] )
 
-  if req.uri.query
+  if( req.uri.query )
     form = Hash[URI.decode_www_form(req.uri.query)];
     if(form["token"])
       token = form["token"];
       luser = library.check_login_token(nil, token);
-      if luser
+      if( luser )
         sid = library.get_login_token_session(token);
         if not sid
           #TODO check if user has right to create session
@@ -122,7 +122,7 @@ main.addAuth() { |s, req, user, pass|
         s.sid.replace(sid);
         user.replace(luser);
         stream.channel_init(luser);
-        if not isStreamPage
+        if( not isStreamPage )
           req.options["Set-Cookie"] = []
           req.options["Set-Cookie"] << Cookie.new({"session" => sid}, nil, "/", Time.now()+(2*7*24*60*60), nil, nil).to_s();
           req.options["Set-Cookie"] << Cookie.new({"user" => luser}, nil, "/", Time.now()+(2*7*24*60*60), nil, nil).to_s();
@@ -132,13 +132,13 @@ main.addAuth() { |s, req, user, pass|
     end
   end
 
-  if not isStreamPage and req.options["Cookie"]
+  if( not isStreamPage and req.options["Cookie"] )
     cookies = Hash[req.options["Cookie"].split(';').map{ |i| i.strip().split('=')}];
     if cookies["session"]
       session = cookies["session"];
 
       # Check if the session is known in RAM
-      if sessions.exists(session)
+      if( sessions.exists(session) )
         currentSession = sessions.get(session);
         luser = currentSession.Items["user"];
       else # Check in db
@@ -148,14 +148,14 @@ main.addAuth() { |s, req, user, pass|
         end
       end
 
-      if luser
+      if( luser )
         s.user.replace(luser);
         s.sid.replace(session);
         user.replace(luser);
         stream.channel_init(luser);
 
         # Avoid update session last_access for each resources
-        if isMainPage 
+        if( isMainPage )
           currentSession.updateLastRequest() if currentSession;
           library.update_session_last_connexion(session);
         end
@@ -164,11 +164,11 @@ main.addAuth() { |s, req, user, pass|
     end
   end
 
-  if pass
+  if( pass )
     if(user != "void" and library.login(user, pass) )
       sid = library.create_user_session(user, ip_address, user_agent);
 
-      if sessions.exists(sid)
+      if( sessions.exists(sid) )
         currentSession = sessions.get(sid);
       else
         currentSession = sessions.add(sid, user, ip_address, user_agent);
@@ -176,7 +176,7 @@ main.addAuth() { |s, req, user, pass|
 
       stream.channel_init(s.user)
       s.sid.replace(sid)
-      if not isStreamPage
+      if( not isStreamPage )
         req.options["Set-Cookie"] = []
         req.options["Set-Cookie"] << Cookie.new({"session" => sid}, nil, "/", Time.now()+(2*7*24*60*60), nil, nil).to_s();
         req.options["Set-Cookie"] << Cookie.new({"user" => user}, nil, "/", Time.now()+(2*7*24*60*60), nil, nil).to_s();
